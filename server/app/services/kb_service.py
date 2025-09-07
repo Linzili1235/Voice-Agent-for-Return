@@ -199,3 +199,4 @@ class KBService:
 
 # Global knowledge base service instance
 kb_service = KBService()
+

@@ -1,7 +1,7 @@
 # 数据模式定义模块 - 包含所有 API 请求和响应的数据模型
 from typing import List, Optional, Literal
 from datetime import datetime
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, HttpUrl
 
 
 # RMA Email Tool Schemas
@@ -112,3 +112,36 @@ class ErrorResponse(BaseModel):
     error: str = Field(description="Error message")
     detail: Optional[str] = Field(default=None, description="Additional error details")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Error timestamp")
+
+
+# Slot Extraction Schemas
+class SlotExtractionInput(BaseModel):
+    """Input model for slot extraction from speech transcript."""
+    
+    transcript: str = Field(..., description="Speech transcript to extract slots from")
+    locale: Optional[str] = Field(default=None, description="Locale code (e.g., 'en-US', 'zh-CN')")
+    target_language: Optional[str] = Field(default=None, description="Optional target language for recap translation")
+
+
+class Slots(BaseModel):
+    """Extracted slots from speech transcript."""
+    
+    vendor: Optional[str] = Field(default=None, description="Vendor name")
+    order_id: Optional[str] = Field(default=None, description="Order ID")
+    item_sku: Optional[str] = Field(default=None, description="Item SKU")
+    intent: Optional[Literal["return", "refund", "replacement"]] = Field(default=None, description="Intent type")
+    reason: Optional[Literal["damaged", "missing", "wrong_item", "not_as_described", "other"]] = Field(default=None, description="Reason for RMA")
+    evidence_urls: List[HttpUrl] = Field(default_factory=list, description="Evidence URLs")
+
+
+class SlotExtractionOutput(BaseModel):
+    """Output model for slot extraction results."""
+    
+    ok: bool = Field(description="Whether extraction was successful")
+    language: Optional[str] = Field(default=None, description="Detected language of the transcript")
+    slots: Slots = Field(description="Extracted slots")
+    missing_fields: List[str] = Field(default_factory=list, description="List of missing required fields")
+    clarify_question: Optional[str] = Field(default=None, description="Single concise follow-up question if needed")
+    recap_line: Optional[str] = Field(default=None, description="One-line confirmation to read back to user")
+    notes: Optional[str] = Field(default=None, description="Optional brief reasoning for logs (no PII)")
+

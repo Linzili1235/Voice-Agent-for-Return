@@ -129,3 +129,4 @@ def record_submission_logged(vendor: str, intent: str) -> None:
         vendor=vendor,
         intent=intent
     ).inc()
+
