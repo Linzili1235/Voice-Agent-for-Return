@@ -346,3 +346,4 @@ def test_return_workflow_without_contact_info():
         assert data["status"] == "completed"
         assert data["data"]["email_sent"] is True
         assert data["data"]["sms_sent"] is False
+

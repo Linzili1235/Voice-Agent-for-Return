@@ -246,3 +246,4 @@ def test_make_rma_email_without_contact_email():
     data = response.json()
     
     assert "Customer" in data["body"]  # Should use default "Customer"
+

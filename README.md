@@ -199,6 +199,162 @@ Send SMS notification.
 }
 ```
 
+#### `POST /tools/llm_extract_slots`
+Extract structured slots from speech transcript using LLM or rule-based fallback.
+
+**Request**:
+```json
+{
+  "transcript": "I want to return my Amazon order 123-4567890-1234567, the item is damaged",
+  "locale": "en-US",
+  "target_language": null
+}
+```
+
+**Response**:
+```json
+{
+  "ok": true,
+  "language": "en-US",
+  "slots": {
+    "vendor": "amazon",
+    "order_id": "123-4567890-1234567",
+    "item_sku": null,
+    "intent": "return",
+    "reason": "damaged",
+    "evidence_urls": []
+  },
+  "missing_fields": ["item_sku"],
+  "clarify_question": "What is the SKU or product name of the item you want to return?",
+  "recap_line": "I'll help you with your amazon order 123-4567890-1234567 return request due to damaged.",
+  "notes": "Rule-based extraction using keyword matching"
+}
+```
+
+#### `POST /tools/normalize_slots`
+Normalize and clean extracted slots.
+
+**Request**:
+```json
+{
+  "vendor": "amazon",
+  "order_id": "123-4567890-1234567",
+  "item_sku": "B08N5WRWNW",
+  "intent": "return",
+  "reason": "broken",
+  "evidence_urls": []
+}
+```
+
+**Response**:
+```json
+{
+  "vendor": "amazon",
+  "order_id": "123-4567890-1234567",
+  "item_sku": "B08N5WRWNW",
+  "intent": "return",
+  "reason": "damaged",
+  "evidence_urls": []
+}
+```
+
+#### `POST /tools/llm_recap`
+Generate a recap line from normalized slots.
+
+**Request**:
+```json
+{
+  "slots": {
+    "vendor": "amazon",
+    "order_id": "123-4567890-1234567",
+    "item_sku": "B08N5WRWNW",
+    "intent": "return",
+    "reason": "damaged",
+    "evidence_urls": []
+  },
+  "locale": "en-US",
+  "target_language": null
+}
+```
+
+**Response**:
+```json
+{
+  "recap_line": "I'll help you with your amazon order 123-4567890-1234567 return request due to damaged."
+}
+```
+
+## 🤖 LLM-lite Interpreter
+
+The **LLM-lite Interpreter** provides intelligent natural language processing capabilities for voice agent interactions. These endpoints transform messy speech transcripts into structured data for RMA processing.
+
+### When to Use
+
+- **Voice Agent Integration**: Process natural language input from phone calls
+- **Multi-language Support**: Handle both English and Chinese transcripts
+- **Data Normalization**: Clean and standardize extracted information
+- **Fallback Processing**: Rule-based extraction when LLM services are unavailable
+
+### Key Features
+
+- **Intelligent Extraction**: Uses LLM or rule-based fallback to extract structured slots
+- **Correction Handling**: Processes user corrections (e.g., "更正：Actually it's Target...")
+- **Missing Field Detection**: Identifies incomplete information and suggests clarifications
+- **Language Detection**: Automatically detects input language and generates appropriate responses
+- **Vendor Normalization**: Maps common vendor names and aliases to standard formats
+
+### Sample Workflow
+
+1. **Extract Slots**: `POST /tools/llm_extract_slots` - Parse speech transcript
+2. **Normalize Data**: `POST /tools/normalize_slots` - Clean and standardize extracted information
+3. **Generate Recap**: `POST /tools/llm_recap` - Create confirmation message for user
+
+### Example: Complete Processing
+
+**Input Transcript**: *"I need to return my Amazon order 123-4567890-1234567, the item B08N5WRWNW is damaged"*
+
+**Step 1 - Extract Slots**:
+```json
+{
+  "ok": true,
+  "language": "en-US",
+  "slots": {
+    "vendor": "amazon",
+    "order_id": "123-4567890-1234567",
+    "item_sku": "B08N5WRWNW",
+    "intent": "return",
+    "reason": "damaged",
+    "evidence_urls": []
+  },
+  "missing_fields": [],
+  "clarify_question": null,
+  "recap_line": "I'll help you with your amazon order 123-4567890-1234567 return request due to damaged."
+}
+```
+
+**Step 2 - Normalize Slots** (if needed):
+```json
+{
+  "vendor": "amazon",
+  "order_id": "123-4567890-1234567",
+  "item_sku": "B08N5WRWNW",
+  "intent": "return",
+  "reason": "damaged",
+  "evidence_urls": []
+}
+```
+
+**Step 3 - Generate Recap**:
+```json
+{
+  "recap_line": "I'll help you with your amazon order 123-4567890-1234567 return request due to damaged."
+}
+```
+
+### Configuration
+
+Set `PROVIDER=stub` for rule-based processing or `PROVIDER=openai`/`PROVIDER=anthropic` for LLM-powered extraction. The system automatically falls back to rule-based processing if LLM services are unavailable.
+
 ### Workflow Endpoints
 
 #### `POST /workflow/return`

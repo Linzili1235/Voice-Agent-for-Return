@@ -29,6 +29,12 @@ class Settings(BaseSettings):
     # Redis Configuration
     redis_url: str = Field(default="redis://localhost:6379/0", description="Redis connection URL")
     
+    # LLM Configuration
+    provider: str = Field(default="stub", description="LLM provider (openai, anthropic, stub)")
+    model: str = Field(default="gpt-4o-mini", description="LLM model name")
+    openai_api_key: Optional[str] = Field(default=None, description="OpenAI API key")
+    anthropic_api_key: Optional[str] = Field(default=None, description="Anthropic API key")
+    
     # Monitoring
     enable_metrics: bool = Field(default=True, description="Enable metrics collection")
     
@@ -40,6 +46,14 @@ class Settings(BaseSettings):
             raise ValueError(f"Log level must be one of {allowed_levels}")
         return v.upper()
     
+    @validator("provider")
+    def validate_provider(cls, v: str) -> str:
+        """Validate LLM provider is one of the allowed values."""
+        allowed_providers = ["openai", "anthropic", "stub"]
+        if v.lower() not in allowed_providers:
+            raise ValueError(f"Provider must be one of {allowed_providers}")
+        return v.lower()
+    
     @property
     def smtp_configured(self) -> bool:
         """Check if SMTP is properly configured."""
@@ -50,6 +64,17 @@ class Settings(BaseSettings):
         """Check if SMS is properly configured."""
         return bool(self.sms_api_key and self.sms_api_url)
     
+    @property
+    def llm_configured(self) -> bool:
+        """Check if LLM is properly configured."""
+        if self.provider == "stub":
+            return True
+        elif self.provider == "openai":
+            return bool(self.openai_api_key)
+        elif self.provider == "anthropic":
+            return bool(self.anthropic_api_key)
+        return False
+    
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
@@ -58,3 +83,4 @@ class Settings(BaseSettings):
 
 # Global settings instance
 settings = Settings()
+

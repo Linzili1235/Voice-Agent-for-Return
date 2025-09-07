@@ -7,7 +7,7 @@ import time
 
 from app.config import settings
 from app.utils import setup_logging, get_logger, cache_manager
-from app.routers import tools_email, tools_misc, meta, workflow
+from app.routers import tools_email, meta, workflow, tools_nlp
 from app.routers.meta import record_request
 
 
@@ -100,7 +100,7 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
 
 # Include routers
 app.include_router(tools_email.router)
-app.include_router(tools_misc.router)
+app.include_router(tools_nlp.router)
 app.include_router(meta.router)
 app.include_router(workflow.router)
 
@@ -119,6 +119,9 @@ async def root() -> dict:
             "POST /tools/send_email",
             "POST /tools/log_submission",
             "POST /tools/send_sms",
+            "POST /tools/llm_extract_slots",
+            "POST /tools/normalize_slots",
+            "POST /tools/llm_recap",
             "GET /health",
             "GET /metrics"
         ],
